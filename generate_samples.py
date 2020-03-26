@@ -1,5 +1,4 @@
 import numpy as np
-from numpy.random import *
 import pandas as pd
 import matplotlib.pyplot as plt
 
@@ -90,15 +89,3 @@ def generate_samples(n_samples,n_individuals,activities,grid_size=[100,100],nois
         df = df.append(group_df, ignore_index=True)
 
     print(df.head)
-
-
-n_samples = 100
-n_individuals = 50
-activities = ['test_activity_1']
-grid_size = [100,100]
-noise = 0.1
-labeled = True
-
-# generate_samples(n_samples, n_individuals, activities, grid_size, noise, labeled)
-group_df = generate_group_activity_df(1, 'test_activity_1', 50, [100,100], 0.1, 1)
-plot_group(1, group_df)

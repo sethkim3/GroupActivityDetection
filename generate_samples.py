@@ -16,13 +16,87 @@ def generate_group_activity_df(group_num, activity, n_individuals, grid_size, no
 
     group_df = pd.DataFrame(columns=['group_num', 'individual_num', 'x_pos', 'y_pos', 'x_vel', 'y_vel', 'activity_label'])
 
-    if(activity == 'test_activity_1'):
+    if(activity == 'sports'):
         for row in range(n_individuals):
             x_pos = np.random.uniform(0,1) * grid_size[0]
             y_pos = np.random.uniform(0,1) * grid_size[1]
             x_vel = np.random.uniform(-1,1) * 5
             y_vel = np.random.uniform(-1,1) * 5
             group_df = group_df.append(pd.Series([group_num, row, x_pos, y_pos, x_vel, y_vel, label], index=group_df.columns), ignore_index=True)
+
+
+    #Sitting in a car or bus moving in one direction
+    if(activity == 'traveling'):
+        x_vel = np.random.uniform(-1,1) * 5
+        y_vel = np.random.uniform(-1,1) * 5
+        for row in range(n_individuals):
+            x_pos = np.random.uniform(0,1) * grid_size[0]
+            y_pos = np.random.uniform(0,1) * grid_size[1]    
+            group_df = group_df.append(pd.Series([group_num, row, x_pos, y_pos, x_vel, y_vel, label], index=group_df.columns), ignore_index=True)
+
+    #Sitting in a row or multiple rows watching media
+    if(activity == 'media'):
+        x_vel = 0
+        y_vel = 0
+        for row in range(n_individuals):
+            x_pos = np.random.uniform(0,1) * grid_size[0]
+            y_pos = round(np.random.uniform(0,1) * grid_size[1])  
+            group_df = group_df.append(pd.Series([group_num, row, x_pos, y_pos, x_vel, y_vel, label], index=group_df.columns), ignore_index=True)
+
+    #Sitting around a circular table facing inwards
+    if(activity == 'eating'):
+        x_vel = 0
+        y_vel = 0
+        angles = np.linspace(0, 2*np.pi, n_individuals)
+        center_x,center_y = [grid_size[0]/2,grid_size[1]/2]
+        radius = min(grid_size[0]/2,grid_size[1]/2)
+        row = 0
+        for ang in angles:
+            x_pos = center_x + radius*np.cos(ang)
+            y_pos = center_y + radius*np.sin(ang)
+            group_df = group_df.append(pd.Series([group_num, row, x_pos, y_pos, x_vel, y_vel, label], index=group_df.columns), ignore_index=True)      
+            row = row + 1
+    #Line of people following eachother
+    if(activity == 'line'):
+        last_x_pos = np.random.uniform(0,1) * grid_size[0]
+        last_y_pos = np.random.uniform(0,1) * grid_size[1]
+        num = np.random.randint(2)
+        
+        if(num):
+            for row in range(n_individuals):
+                print("---------X-------")
+                x_pos = last_x_pos + 1
+                y_pos = last_y_pos + np.random.uniform(-0.5,0.5)
+                
+                x_vel = (x_pos - last_x_pos) / grid_size[0]
+                y_vel = (y_pos - last_y_pos) / grid_size[1]
+
+                last_x_pos = x_pos
+                last_y_pos = y_pos
+                group_df = group_df.append(pd.Series([group_num, row, x_pos, y_pos, x_vel, y_vel, label], index=group_df.columns), ignore_index=True)
+        else:
+            for row in range(n_individuals):
+                print("---------Y-------")
+                x_pos = last_x_pos + np.random.uniform(-0.5,0.5)
+                y_pos = last_y_pos + 1
+                
+                x_vel = (x_pos - last_x_pos) / grid_size[0]
+                y_vel = (y_pos - last_y_pos) / grid_size[1]
+
+                last_x_pos = x_pos
+                last_y_pos = y_pos
+                group_df = group_df.append(pd.Series([group_num, row, x_pos, y_pos, x_vel, y_vel, label], index=group_df.columns), ignore_index=True)
+    
+    
+    # #Sitting in a small row or rows all facing the same direction
+    # if(activity == 'Media'):
+    #     for row in range(n_individuals):
+    #         x_pos = np.random.uniform(0,1) * grid_size[0]
+    #         y_pos = np.random.uniform(0,1) * grid_size[1]
+    #         x_vel = np.random.uniform(-1,1) * 5
+    #         y_vel = np.random.uniform(-1,1) * 5
+    #         group_df = group_df.append(pd.Series([group_num, row, x_pos, y_pos, x_vel, y_vel, label], index=group_df.columns), ignore_index=True)
+            
 
     return group_df
 

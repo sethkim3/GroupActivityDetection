@@ -4,14 +4,14 @@ import matplotlib.pyplot as plt
 import networkx as nx
 from itertools import combinations
 
-def generate_group_activity_df(group_num, activity, n_individuals, grid_size, noise, label=None):
+def generate_group_activity_df(group_num, activity, n_individuals, grid_size, noise=0.0, label=None):
     """
     Generates a df for a single group of individuals depending on the assigned activity.
     :param group_num: The group number.
     :param activity: The activity that has been assigned to the group.
     :param n_individuals: The number of individuals in the group.
     :param grid_size: Size of the grid. Default value is 100x100
-    :param noise: Noise to add to position and velocity assignments. Default value is 0.1.
+    :param noise: Noise to add to position and velocity assignments. Default value is 0.
     :param label: The label to assign to the label column if set True.
     :return: A dataframe of size n_individuals rows and 7 columns.
     """
@@ -20,42 +20,47 @@ def generate_group_activity_df(group_num, activity, n_individuals, grid_size, no
 
     if(activity == 'sports'):
         for row in range(n_individuals):
-            x_pos = np.random.uniform(0,1) * grid_size[0]
-            y_pos = np.random.uniform(0,1) * grid_size[1]
-            x_vel = np.random.uniform(-1,1) * 5
-            y_vel = np.random.uniform(-1,1) * 5
+            x_pos = np.random.uniform(0,1) * grid_size[0] * (1 + np.random.uniform(-1*noise, noise))
+            y_pos = np.random.uniform(0,1) * grid_size[1] * (1 + np.random.uniform(-1*noise, noise))
+            x_vel = np.random.uniform(-1,1) * 5 * (1 + np.random.uniform(-1*noise, noise))
+            y_vel = np.random.uniform(-1,1) * 5 * (1 + np.random.uniform(-1*noise, noise))
             group_df = group_df.append(pd.Series([group_num, row, x_pos, y_pos, x_vel, y_vel, label], index=group_df.columns), ignore_index=True)
 
 
     #Sitting in a car or bus moving in one direction
     if(activity == 'traveling'):
-        x_vel = np.random.uniform(-1,1) * 5
-        y_vel = np.random.uniform(-1,1) * 5
+        x_vel = np.random.uniform(-1,1) * 5 * (1 + np.random.uniform(-1*noise, noise))
+        y_vel = np.random.uniform(-1,1) * 5 * (1 + np.random.uniform(-1*noise, noise))
         for row in range(n_individuals):
-            x_pos = np.random.uniform(0,1) * grid_size[0]
-            y_pos = np.random.uniform(0,1) * grid_size[1]    
+            x_pos = np.random.uniform(0,1) * grid_size[0] * (1 + np.random.uniform(-1*noise, noise))
+            y_pos = np.random.uniform(0,1) * grid_size[1] * (1 + np.random.uniform(-1*noise, noise))
             group_df = group_df.append(pd.Series([group_num, row, x_pos, y_pos, x_vel, y_vel, label], index=group_df.columns), ignore_index=True)
 
     #Sitting in a row or multiple rows watching media
     if(activity == 'media'):
-        x_vel = 0
-        y_vel = 0
-        for row in range(n_individuals):
-            x_pos = np.random.uniform(0,1) * grid_size[0]
-            y_pos = round(np.random.uniform(0,1) * grid_size[1])  
-            group_df = group_df.append(pd.Series([group_num, row, x_pos, y_pos, x_vel, y_vel, label], index=group_df.columns), ignore_index=True)
+        rows = 10 #create 10 rows
+        row_size = grid_size[0]/rows
+        num_per_row = int(round(n_individuals/rows))
+        for row in range(rows):
+            # get positions
+            x_pos = row*row_size * (1 + np.random.uniform(-1*noise, noise))
+            for individual in range(num_per_row):
+                x_vel = np.random.uniform(-1 * noise, noise)
+                y_vel = np.random.uniform(-1 * noise, noise)
+                y_pos = round(np.random.uniform(0,1) * grid_size[1]) * (1 + np.random.uniform(-1*noise, noise))
+                group_df = group_df.append(pd.Series([group_num, row, x_pos, y_pos, x_vel, y_vel, label], index=group_df.columns), ignore_index=True)
 
     #Sitting around a circular table facing inwards
     if(activity == 'eating'):
-        x_vel = 0
-        y_vel = 0
         angles = np.linspace(0, 2*np.pi, n_individuals)
         center_x,center_y = [grid_size[0]/2,grid_size[1]/2]
         radius = min(grid_size[0]/2,grid_size[1]/2)
         row = 0
         for ang in angles:
-            x_pos = center_x + radius*np.cos(ang)
-            y_pos = center_y + radius*np.sin(ang)
+            x_pos = center_x + radius*np.cos(ang) * (1 + np.random.uniform(-1*noise, noise))
+            y_pos = center_y + radius*np.sin(ang) * (1 + np.random.uniform(-1*noise, noise))
+            x_vel = np.random.uniform(-1 * noise, noise)
+            y_vel = np.random.uniform(-1 * noise, noise)
             group_df = group_df.append(pd.Series([group_num, row, x_pos, y_pos, x_vel, y_vel, label], index=group_df.columns), ignore_index=True)      
             row = row + 1
     #Line of people following eachother
@@ -67,11 +72,11 @@ def generate_group_activity_df(group_num, activity, n_individuals, grid_size, no
         if(num):
             for row in range(n_individuals):
                 # print("---------X-------")
-                x_pos = last_x_pos + 1
-                y_pos = last_y_pos + np.random.uniform(-0.5,0.5)
+                x_pos = last_x_pos + 1 * (1 + np.random.uniform(-1*noise, noise))
+                y_pos = last_y_pos + np.random.uniform(-0.5,0.5) * (1 + np.random.uniform(-1*noise, noise))
                 
-                x_vel = (x_pos - last_x_pos) / grid_size[0]
-                y_vel = (y_pos - last_y_pos) / grid_size[1]
+                x_vel = ((x_pos - last_x_pos) / grid_size[0]) * (1 + np.random.uniform(-1*noise, noise))
+                y_vel = ((y_pos - last_y_pos) / grid_size[1]) * (1 + np.random.uniform(-1*noise, noise))
 
                 last_x_pos = x_pos
                 last_y_pos = y_pos
@@ -79,11 +84,11 @@ def generate_group_activity_df(group_num, activity, n_individuals, grid_size, no
         else:
             for row in range(n_individuals):
                 # print("---------Y-------")
-                x_pos = last_x_pos + np.random.uniform(-0.5,0.5)
-                y_pos = last_y_pos + 1
+                x_pos = (last_x_pos + np.random.uniform(-0.5,0.5)) * (1 + np.random.uniform(-1*noise, noise))
+                y_pos = (last_y_pos + 1) * (1 + np.random.uniform(-1*noise, noise))
                 
-                x_vel = (x_pos - last_x_pos) / grid_size[0]
-                y_vel = (y_pos - last_y_pos) / grid_size[1]
+                x_vel = ((x_pos - last_x_pos) / grid_size[0]) * (1 + np.random.uniform(-1*noise, noise))
+                y_vel = ((y_pos - last_y_pos) / grid_size[1]) * (1 + np.random.uniform(-1*noise, noise))
 
                 last_x_pos = x_pos
                 last_y_pos = y_pos
@@ -121,6 +126,7 @@ def plot_group(group_num, group_df):
 
     fig, ax = plt.subplots()
     ax.scatter(x, y, marker="o")
+
     ax.quiver(pos_x, pos_y, u / norm, v / norm, angles="xy", zorder=5, pivot="mid")
     plt.title('Positions and Velocities of Individuals in Group ' + str(group_num))
     plt.show()

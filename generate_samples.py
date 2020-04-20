@@ -1,6 +1,8 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import networkx as nx
+from itertools import combinations
 
 def generate_group_activity_df(group_num, activity, n_individuals, grid_size, noise, label=None):
     """
@@ -64,7 +66,7 @@ def generate_group_activity_df(group_num, activity, n_individuals, grid_size, no
         
         if(num):
             for row in range(n_individuals):
-                print("---------X-------")
+                # print("---------X-------")
                 x_pos = last_x_pos + 1
                 y_pos = last_y_pos + np.random.uniform(-0.5,0.5)
                 
@@ -76,7 +78,7 @@ def generate_group_activity_df(group_num, activity, n_individuals, grid_size, no
                 group_df = group_df.append(pd.Series([group_num, row, x_pos, y_pos, x_vel, y_vel, label], index=group_df.columns), ignore_index=True)
         else:
             for row in range(n_individuals):
-                print("---------Y-------")
+                # print("---------Y-------")
                 x_pos = last_x_pos + np.random.uniform(-0.5,0.5)
                 y_pos = last_y_pos + 1
                 
@@ -103,6 +105,7 @@ def generate_group_activity_df(group_num, activity, n_individuals, grid_size, no
 def plot_group(group_num, group_df):
     """
     Plots the individual points from a group plot with directional arrows for the velocities.
+    :param group_num: The group number (for title).
     :param group_df: A group_df generated from generate_group_activity_df.
     :return: N/A
     """
@@ -121,6 +124,29 @@ def plot_group(group_num, group_df):
     ax.quiver(pos_x, pos_y, u / norm, v / norm, angles="xy", zorder=5, pivot="mid")
     plt.title('Positions and Velocities of Individuals in Group ' + str(group_num))
     plt.show()
+
+def visualize_distance_network(group_num, group_df, n_individuals):
+    """
+    Visualize a group df as a distance network (for feature engineering).
+    :param group_num: The group number (for title).
+    :param group_df: A group_df generated from generate_group_activity_df.
+    :param n_individuals: Number of individuals in the group.
+    :return: N/A
+    """
+    G = nx.Graph()
+    edges_with_weights = []
+    individual_combos = combinations(list(range(n_individuals)), 2)
+    for i, j in individual_combos:
+        x_dist = group_df.iloc[i]['x_pos'] - group_df.iloc[j]['x_pos']
+        y_dist = group_df.iloc[i]['y_pos'] - group_df.iloc[j]['y_pos']
+        tot_distance = pow(pow(x_dist, 2) + pow(y_dist, 2), 0.5)
+        edges_with_weights.append((i, j, tot_distance))
+    G.add_weighted_edges_from(edges_with_weights)
+    pos = nx.spring_layout(G, weight='weight')
+    nx.draw(G, pos, node_color='b', node_size=50, with_labels=False)
+    plt.title('Distance Network for Group ' + str(group_num))
+    plt.show()
+
 
 def generate_samples(n_samples,n_individuals,activities,grid_size=[100,100],noise=0.1,labeled=True):
     """
@@ -155,11 +181,11 @@ def generate_samples(n_samples,n_individuals,activities,grid_size=[100,100],nois
 
     for group_num in range(n_samples):
         activity = group_assignment[group_num]
-        label = activity_label[activity]
+        label = int(activity_label[activity])
         if(labeled == False):
             label = None
         group_df = generate_group_activity_df(group_num, activity, n_individuals, grid_size, noise, label)
 
         df = df.append(group_df, ignore_index=True)
 
-    print(df.head)
+    return df

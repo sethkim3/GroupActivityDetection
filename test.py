@@ -3,11 +3,11 @@ from learn_activities import *
 import csv
 
 # Example of generating sample data.
-n_samples = 100
+n_samples = 25
 n_individuals = 50
 activities = ['sports', 'traveling', 'media', 'eating', 'line']
 grid_size = [100,100]
-noise = 0.5
+noise = 0.1
 labeled = True
 features = ['x_pos_high',
             'x_pos_low',
@@ -35,7 +35,7 @@ features_df = engineer_features(samples, n_samples, n_individuals, features)
 print(features_df)
 
 print("PREPARING ML MODEL...")
-model, scores = learn_activities(features_df, 'NaiveBayes')
+model, scores, returned_features = learn_activities(features_df, 'NaiveBayes')
 
 print("GENERATING NEW DATA...")
 new_samples = generate_samples(n_samples, n_individuals, activities, grid_size, noise, labeled)
@@ -43,6 +43,7 @@ print(new_samples)
 
 print("ENGINEERING FEATURES ON NEW DATA...")
 new_features_df = engineer_features(new_samples, n_samples, n_individuals, features)
+print(new_features_df)
 
 print("PREDICTING ON NEW DATA...")
 predictions, class_accuracies, class_precisions, class_recalls = predict_activities(new_features_df, model, activities)
